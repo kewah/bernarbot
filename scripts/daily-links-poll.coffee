@@ -33,3 +33,24 @@ module.exports = (robot) ->
 
     robot.brain.set("daily-links", dailyLinks)
     console.log robot.brain.get("daily-links")
+
+
+  robot.respond /list/i, (msg) ->
+    date = new Date()
+    if date.getHours() < 17
+      msg.send """
+        Be patient my friend. I can't send the list before 17.00
+      """
+      return
+
+    msg.send linksToChooseMessage()
+
+
+  linksToChooseMessage = () ->
+    links = robot.brain.get("daily-links")
+    text = links.reduce (previous, current, index) ->
+      if typeof previous is 'object'
+        previous = "- #{index}: #{previous.url}"
+      return "#{previous}\n- #{index + 1}: #{current.url}"
+
+    return "Choose your favourites links of the day: \n#{text}"
