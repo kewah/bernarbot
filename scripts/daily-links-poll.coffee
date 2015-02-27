@@ -123,4 +123,25 @@ module.exports = (robot) ->
     msg.send "You can vote like this: `vote 1, 2, 3`"
 
 
+  # Displays the list of links the user has voted for
+  robot.respond /my\s*vote/i, (msg) ->
+    user = msg.message.user
+    links = getLinks()
+
+    if links.length == 0
+      msg.send "You haven't voted today because no links have been shared."
+      return
+
+    userVotes = links
+      .filter (link) ->
+        return link.vote.indexOf(user.name) > -1
+      .map (link) ->
+        return "- #{link.url}"
+
+    if userVotes.length == 0
+      msg.send "You haven't voted today."
+    else
+      msg.send "You have voted for:\n#{userVotes.join('\n')}"
+
+
 
