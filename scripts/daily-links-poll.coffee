@@ -114,10 +114,10 @@ module.exports = (robot) ->
   # Vote for a link (via mention or direct message).
   # Example: @bernarbot vote 1, 2, 3
   robot.respond /vote (.*)/i, (msg) ->
-    # date = new Date()
-    # if date.getHours() < 17
-    #   msg.send "Be patient my friend. You can't vote before 17.00."
-    #   return
+    date = new Date()
+    if date.getHours() < 17
+      msg.send "Be patient my friend. You can't vote before 17.00."
+      return
 
     user = msg.message.user.name
     links = getLinks()
