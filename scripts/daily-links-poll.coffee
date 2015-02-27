@@ -15,6 +15,15 @@
 
 urlNorm = require("url-norm")
 arrayRemove = require("array-remove")
+schedule = require("node-schedule")
+
+voteOpeningCron = new schedule.RecurrenceRule()
+voteOpeningCron.hour = 17
+voteOpeningCron.minute = 0
+
+voteClosingCron = new schedule.RecurrenceRule()
+voteClosingCron.hour = 7
+voteClosingCron.minute = 0
 
 module.exports = (robot) ->
 
@@ -34,7 +43,7 @@ module.exports = (robot) ->
         previous = "- #{index}: #{previous.url}"
       return "#{previous}\n- #{index + 1}: #{current.url}"
 
-    return "Choose your favourites links of the day: \n#{text} \n DM me `vote 1 2 3`"
+    return "Choose your favourites links of the day: \n#{text}"
 
 
   getEmptyVoteErrorMessage = ->
@@ -51,6 +60,7 @@ module.exports = (robot) ->
     robot.brain.set("daily-links", links)
 
 
+  # from "1, 2, 3" to [0, 1, 2]
   extractVoteIndex = (voteMessage) ->
     return voteMessage
       .replace(/,\s?/g, " ").split(" ")
@@ -62,7 +72,20 @@ module.exports = (robot) ->
         return parseInt(value, 10) - 1
 
 
-  if !getLinks() then setLinks([])
+  # Executed every day at 17.00.
+  # It displays a message in the general channel
+  schedule.scheduleJob voteOpeningCron, ->
+    return if getLinks().length == 0
+    robot.messageRoom "general", "It's time to vote! :hammer:\n#{getLinksToChooseMessage()}"
+
+
+  # Executed every day at 7.00
+  # I sends the vote data to the server.
+  schedule.scheduleJob voteClosingCron, ->
+    return if getLinks().length == 0
+    # TODO send the data to the server
+
+
   # If an user share a link, we saved it.
   robot.hear /(\w+)\:\/\/([^\/\:]*)(\:\d+)?(\/?.*)/i, (msg) ->
     links = getLinks()
@@ -170,3 +193,6 @@ module.exports = (robot) ->
     voteMessage = voteIndex.map (index) -> "- #{links[index].url}"
 
     msg.send "Your votes have been removed:\n#{voteMessage.join("\n")}"
+
+
+  if !getLinks() then setLinks([])
