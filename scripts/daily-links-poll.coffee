@@ -16,8 +16,6 @@
 urlNorm = require("url-norm")
 
 module.exports = (robot) ->
-  unless robot.brain.get("daily-links")
-    robot.brain.set("daily-links", [])
 
   # Returns the text containing the links list.
   getLinksToChooseMessage = ->
@@ -42,20 +40,30 @@ module.exports = (robot) ->
     return "No links have been shared today.\nCome on! share something! :pray:"
 
 
+  # Returns the links list stored in redis.
+  getLinks = ->
+    return robot.brain.get("daily-links")
+
+
+  # Override the links list.
+  setLinks = (links) ->
+    robot.brain.set("daily-links", links)
+
+
+  if !getLinks() then setLinks([])
   robot.hear /(\w+)\:\/\/([^\/\:]*)(\:\d+)?(\/?.*)/i, (msg) ->
-    dailyLinks = robot.brain.get("daily-links")
+    links = getLinks()
     user = msg.message.user
     url = urlNorm(msg.match[0])
 
-    urlExists = dailyLinks.some (data) -> data.url == url
+    urlExists = links.some (data) -> data.url == url
     return if urlExists
 
-    dailyLinks.push
+    links.push
       user: user
       url: url
 
-    robot.brain.set("daily-links", dailyLinks)
-    console.log robot.brain.get("daily-links")
+    setLinks(links)
 
 
   robot.respond /list/i, (msg) ->
