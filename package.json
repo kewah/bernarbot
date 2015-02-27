@@ -5,6 +5,7 @@
   "author": "Antoine Lehurt <code@kewah.com>",
   "description": "Bernarbot helps developers",
   "dependencies": {
+    "array-remove": "nk-components/array-remove",
     "hubot": "^2.11.1",
     "hubot-help": "^0.1.1",
     "hubot-heroku-keepalive": "0.0.4",
@@ -15,8 +16,7 @@
     "node-schedule": "^0.1.16",
     "url-norm": "^1.0.0"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "engines": {
     "node": "0.12.x"
   }

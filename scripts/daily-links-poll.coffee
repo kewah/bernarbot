@@ -14,6 +14,7 @@
 #   Antoine Lehurt
 
 urlNorm = require("url-norm")
+arrayRemove = require("array-remove")
 
 module.exports = (robot) ->
 
@@ -48,6 +49,17 @@ module.exports = (robot) ->
   # Override the links list.
   setLinks = (links) ->
     robot.brain.set("daily-links", links)
+
+
+  extractVoteIndex = (voteMessage) ->
+    return voteMessage
+      .replace(/,\s?/g, " ").split(" ")
+      # Only keep integers, ignore the rest.
+      .filter (value) ->
+        return value.length > 0 and !isNaN(value)
+      # Transform it to match the `links` index
+      .map (value) ->
+        return parseInt(value, 10) - 1
 
 
   if !getLinks() then setLinks([])
@@ -91,14 +103,7 @@ module.exports = (robot) ->
       msg.send getEmptyVoteErrorMessage()
       return
 
-    vote = msg.match[1]
-      .replace(/,\s?/g, ' ').split(' ')
-      # Only keep integers, ignore the rest.
-      .filter (value) ->
-        return value.length > 0 and !isNaN(value)
-      # Transform it to match the `links` index
-      .map (value) ->
-        return parseInt(value, 10) - 1
+    vote = extractVoteIndex(msg.match[1])
 
     # Upvote
     vote.forEach (linkIndex) ->
@@ -107,12 +112,12 @@ module.exports = (robot) ->
       if linkVote.indexOf(user) == -1
         linkVote.push(user)
 
-    voteMessage = vote.map (linkIndex) ->
-      return "- #{links[linkIndex].url}"
+    # Build the list for the end message.
+    voteMessage = vote.map (linkIndex) -> "- #{links[linkIndex].url}"
 
     msg.send """
       You have voted for:
-      #{voteMessage.join('\n')}
+      #{voteMessage.join("\n")}
       Good job :+1:
 
       (If you change you mind you can unvote: `unvote all` or `unvote 1, 2`).
@@ -135,13 +140,33 @@ module.exports = (robot) ->
     userVotes = links
       .filter (link) ->
         return link.vote.indexOf(user.name) > -1
-      .map (link) ->
-        return "- #{link.url}"
+      .map (link, index) ->
+        return "- #{index + 1}: #{link.url}"
 
     if userVotes.length == 0
       msg.send "You haven't voted today."
     else
-      msg.send "You have voted for:\n#{userVotes.join('\n')}"
+      msg.send "You have voted for:\n#{userVotes.join("\n")}"
 
 
+  # If the user wants to unvote a vote he did.
+  # Example:
+  # @bernarbot unvote all
+  # @bernarbot unvote 1, 2
+  robot.respond /unvote (.*)/i, (msg) ->
+    vote = msg.match[1]
+    user = msg.message.user
+    links = getLinks()
 
+    if vote == "all"
+      links.forEach (link) -> arrayRemove(link.vote, user.name)
+      msg.send "All your votes have been removed. Vote again!"
+      return
+
+    voteIndex = extractVoteIndex(msg.match[1])
+    # Remove the vote from the links data.
+    voteIndex.forEach (index) -> arrayRemove(links[index].vote, user.name)
+    # Build the list for the end message.
+    voteMessage = voteIndex.map (index) -> "- #{links[index].url}"
+
+    msg.send "Your votes have been removed:\n#{voteMessage.join("\n")}"
