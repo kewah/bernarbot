@@ -25,6 +25,12 @@ voteClosingCron = new schedule.RecurrenceRule()
 voteClosingCron.hour = 7
 voteClosingCron.minute = 0
 
+if process.env.FFD_API_URL
+  apiUrl = process.env.FFD_API_URL
+else
+  apiUrl = "localhost:3333"
+
+
 module.exports = (robot) ->
 
   # Returns the text containing the links list.
