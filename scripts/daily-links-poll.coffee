@@ -72,6 +72,13 @@ module.exports = (robot) ->
         return parseInt(value, 10) - 1
 
 
+  # Votes are closed between 7am to 5pm.
+  canUserVote = ->
+    date = new Date()
+    h = date.getHours()
+    return h < 7 and h >= 17
+
+
   # Executed every day at 17.00.
   # It displays a message in the general channel
   schedule.scheduleJob voteOpeningCron, ->
@@ -114,8 +121,7 @@ module.exports = (robot) ->
   # Vote for a link (via mention or direct message).
   # Example: @bernarbot vote 1, 2, 3
   robot.respond /vote (.*)/i, (msg) ->
-    date = new Date()
-    if date.getHours() < 17
+    unless canUserVote()
       msg.send "Be patient my friend. You can't vote before 17.00."
       return
 
