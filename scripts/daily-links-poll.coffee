@@ -26,9 +26,9 @@ voteClosingCron.hour = 7
 voteClosingCron.minute = 0
 
 if process.env.FFD_API_URL
-  apiUrl = process.env.FFD_API_URL
+  API_URL = process.env.FFD_API_URL
 else
-  apiUrl = "localhost:3333"
+  API_URL = "http://localhost:3000"
 
 
 module.exports = (robot) ->
@@ -93,10 +93,24 @@ module.exports = (robot) ->
 
 
   # Executed every day at 7.00
-  # I sends the vote data to the server.
+  # It sends the vote data to the server.
   schedule.scheduleJob voteClosingCron, ->
-    return if getLinks().length == 0
-    # TODO send the data to the server
+    links = getLinks()
+    return if links.length == 0
+
+    links = links.filter (link) -> link.votes.length >= 1
+
+    robot
+      .http("#{API_URL}/links/create")
+      .query({links: JSON.stringify(links)})
+      .post() (err, res, body) ->
+        return unless res
+
+        if res.statusCode == 400
+          console.log JSON.parse(body).error
+        else
+          console.log 'Links added'
+          setLinks([])
 
 
   # If an user share a link, we saved it.
@@ -111,8 +125,9 @@ module.exports = (robot) ->
     links.push
       user: user
       url: url
-      vote: []
+      votes: []
       channel: msg.message.room
+      date: new Date()
 
     setLinks(links)
 
@@ -142,10 +157,10 @@ module.exports = (robot) ->
 
     # Upvote
     vote.forEach (linkIndex) ->
-      links[linkIndex].vote = []
-      linkVote = links[linkIndex].vote
-      if linkVote.indexOf(user) == -1
-        linkVote.push(user)
+      links[linkIndex].votes = []
+      linkVotes = links[linkIndex].votes
+      if linkVotes.indexOf(user) == -1
+        linkVotes.push(user)
 
     # Build the list for the end message.
     voteMessage = vote.map (linkIndex) -> "- #{links[linkIndex].url}"
@@ -159,10 +174,6 @@ module.exports = (robot) ->
     """
 
 
-  robot.respond /vote$/i, (msg) ->
-    msg.send "You can vote like this: `vote 1, 2, 3`"
-
-
   # Displays the list of links the user has voted for
   robot.respond /my\s*vote/i, (msg) ->
     user = msg.message.user
@@ -174,7 +185,7 @@ module.exports = (robot) ->
 
     userVotes = links
       .filter (link) ->
-        return link.vote.indexOf(user.name) > -1
+        return link.votes.indexOf(user.name) > -1
       .map (link, index) ->
         return "- #{index + 1}: #{link.url}"
 
@@ -194,13 +205,13 @@ module.exports = (robot) ->
     links = getLinks()
 
     if vote == "all"
-      links.forEach (link) -> arrayRemove(link.vote, user.name)
+      links.forEach (link) -> arrayRemove(link.votes, user.name)
       msg.send "All your votes have been removed. Vote again!"
       return
 
     voteIndex = extractVoteIndex(msg.match[1])
     # Remove the vote from the links data.
-    voteIndex.forEach (index) -> arrayRemove(links[index].vote, user.name)
+    voteIndex.forEach (index) -> arrayRemove(links[index].votes, user.name)
     # Build the list for the end message.
     voteMessage = voteIndex.map (index) -> "- #{links[index].url}"
 
