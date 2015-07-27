@@ -5,16 +5,13 @@
   "author": "Antoine Lehurt <code@kewah.com>",
   "description": "Bernarbot helps developers",
   "dependencies": {
-    "array-remove": "nk-components/array-remove",
-    "hubot": "^2.11.1",
-    "hubot-help": "^0.1.1",
+    "hubot": "2.13.2",
+    "hubot-curate-links": "0.1.1",
+    "hubot-help": "0.1.1",
     "hubot-heroku-keepalive": "0.0.4",
-    "hubot-old": "^1.0.1",
-    "hubot-redis-brain": "0.0.2",
-    "hubot-scripts": "^2.5.16",
-    "hubot-slack": "^3.2.1",
-    "node-schedule": "^0.1.16",
-    "url-norm": "^1.0.0"
+    "hubot-old": "1.0.1",
+    "hubot-redis-brain": "0.0.3",
+    "hubot-slack": "3.3.0"
   },
   "devDependencies": {},
   "engines": {
