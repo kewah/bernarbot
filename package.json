@@ -6,7 +6,7 @@
   "description": "Bernarbot helps developers",
   "dependencies": {
     "hubot": "2.13.2",
-    "hubot-curate-links": "0.1.2",
+    "hubot-curate-links": "0.2.2",
     "hubot-help": "0.1.1",
     "hubot-slack": "3.3.0"
   },
